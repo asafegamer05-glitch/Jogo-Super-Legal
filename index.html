@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>jogo super legal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- PeerJS CDN para Multiplayer WebRTC -->
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <!-- MENU PRINCIPAL -->
+    <div class="game-container" id="main-menu">
+        <!-- BOTÃO DE TELA CHEIA DO MENU (CANTO SUPERIOR DIREITO) -->
+        <button class="screen-fullscreen-btn" id="btn-fullscreen" title="Alternar Tela Cheia">
+            <span class="fs-icon">⛶</span>
+            <span class="fs-text">TELA CHEIA</span>
+        </button>
+
+        <!-- Canvas de Partículas Animadas -->
+        <canvas id="bg-canvas"></canvas>
+
+        <!-- Overlay de Névoa -->
+        <div class="fog-layer"></div>
+        <div class="vignette-layer"></div>
+
+        <!-- Área Central do Menu -->
+        <div class="menu-center">
+
+            <!-- Ornamento Superior -->
+            <div class="ornament ornament-top">
+                <div class="orn-line"></div>
+                <div class="orn-diamond">◆</div>
+                <div class="orn-line"></div>
+            </div>
+
+            <!-- Logo / Título -->
+            <header class="main-header">
+                <div class="studio-tagline">BOSTA LIQUIDA PRODUCTIONS APRESENTA</div>
+                <h1 class="game-title">
+                    <span class="title-line1">jogo</span>
+                    <span class="title-line2">super legal</span>
+                </h1>
+                <div class="title-subtitle">
+                    <span class="sub-line">◈</span>
+                    UMA AVENTURA ÉPICA DE RPG
+                    <span class="sub-line">◈</span>
+                </div>
+                <div class="version-tag">VERSÃO 1.0.0</div>
+            </header>
+
+            <!-- Ornamento Divisor -->
+            <div class="ornament ornament-divider">
+                <div class="orn-line long"></div>
+                <div class="orn-center-piece">⚔ ✦ ⚔</div>
+                <div class="orn-line long"></div>
+            </div>
+
+            <!-- Botões do Menu Principal -->
+            <nav class="menu-container">
+                <button class="menu-btn start-btn" id="btn-start">
+                    <span class="btn-glow-bg"></span>
+                    <span class="btn-left-deco">▶</span>
+                    <span class="btn-label">
+                        <span class="btn-icon-large">⚔</span>
+                        <span class="btn-text">COMEÇAR O JOGO</span>
+                    </span>
+                    <span class="btn-right-deco">◀</span>
+                </button>
+
+                <button class="menu-btn mp-menu-btn" id="btn-toggle-mp">
+                    <span class="btn-glow-bg"></span>
+                    <span class="btn-left-deco">›</span>
+                    <span class="btn-label">
+                        <span class="btn-icon-large">🌐</span>
+                        <span class="btn-text">MULTIPLAYER (WEBRTC)</span>
+                    </span>
+                    <span class="btn-right-deco">‹</span>
+                </button>
+
+                <button class="menu-btn" id="btn-options">
+                    <span class="btn-glow-bg"></span>
+                    <span class="btn-left-deco">›</span>
+                    <span class="btn-label">
+                        <span class="btn-icon-large">⚙</span>
+                        <span class="btn-text">OPÇÕES</span>
+                    </span>
+                    <span class="btn-right-deco">‹</span>
+                </button>
+
+                <button class="menu-btn" id="btn-credits">
+                    <span class="btn-glow-bg"></span>
+                    <span class="btn-left-deco">›</span>
+                    <span class="btn-label">
+                        <span class="btn-icon-large">📜</span>
+                        <span class="btn-text">CRÉDITOS</span>
+                    </span>
+                    <span class="btn-right-deco">‹</span>
+                </button>
+
+                <button class="menu-btn" id="btn-updates">
+                    <span class="btn-glow-bg"></span>
+                    <span class="btn-left-deco">›</span>
+                    <span class="btn-label">
+                        <span class="btn-icon-large">📋</span>
+                        <span class="btn-text">LOG DE UPDATES</span>
+                    </span>
+                    <span class="btn-right-deco">‹</span>
+                </button>
+            </nav>
+
+            <!-- Ornamento Inferior -->
+            <div class="ornament ornament-bottom">
+                <div class="orn-line"></div>
+                <div class="orn-diamond">◆</div>
+                <div class="orn-line"></div>
+            </div>
+
+        </div>
+
+        <!-- PAINEL MULTIPLAYER WEBRTC (PARTE DIREITA DA TELA) -->
+        <aside class="multiplayer-sidebar" id="multiplayer-sidebar">
+            <div class="mp-box">
+                <div class="mp-header">
+                    <button class="mp-close-btn" id="btn-close-mp-sidebar" title="Fechar painel multiplayer">&times;</button>
+                    <span class="mp-badge-tag">WEBRTC P2P</span>
+                    <h2 class="mp-heading">🌐 MULTIPLAYER</h2>
+                    <p class="mp-subheading">Jogue com amigos em tempo real!</p>
+                </div>
+
+                <!-- SEÇÃO HOST (CRIAR SALA) -->
+                <div class="mp-section host-section">
+                    <div class="mp-sec-title">👑 CRIAR SALA (HOST)</div>
+                    <p class="mp-sec-desc">Você será o Host (calcula dano de npcs, players, etc). Escolha 4 caracteres para o ID:</p>
+                    <div class="mp-control-group">
+                        <input type="text" id="mp-host-code" class="mp-code-input" maxlength="4" placeholder="ABCD" autocomplete="off" spellcheck="false">
+                        <button class="mp-action-btn btn-create-room" id="btn-create-room">CRIAR SALA</button>
+                    </div>
+                </div>
+
+                <div class="mp-divider-line">
+                    <span>⚔️ OU ENTRE NA SALA DO AMIGO ⚔️</span>
+                </div>
+
+                <!-- SEÇÃO CLIENT (ENTRAR NA SALA) -->
+                <div class="mp-section join-section">
+                    <div class="mp-sec-title">🎮 ENTRAR NA SALA</div>
+                    <p class="mp-sec-desc">Digite os 4 caracteres da sala do seu amigo:</p>
+                    <div class="mp-control-group">
+                        <input type="text" id="mp-join-code" class="mp-code-input" maxlength="4" placeholder="ABCD" autocomplete="off" spellcheck="false">
+                        <button class="mp-action-btn btn-join-room" id="btn-join-room">ENTRAR</button>
+                    </div>
+                </div>
+
+                <!-- STATUS / FEEDBACK DA CONEXÃO -->
+                <div class="mp-status-container" id="mp-status-container">
+                    <span class="mp-status-dot" id="mp-status-dot"></span>
+                    <span class="mp-status-msg" id="mp-status-msg">Pronto para conectar</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="footer-inner">
+                <span class="footer-deco">─────</span>
+                <span class="studio-name">BOSTA LIQUIDA PRODUCTIONS © 2026</span>
+                <span class="footer-deco">─────</span>
+            </div>
+            <p class="copyright-notice">Todos os direitos reservados por que nós queremos</p>
+        </footer>
+    </div>
+
+    <!-- MODAL: AVISO MOBILE BETA -->
+    <div class="modal-backdrop" id="modal-mobile-beta">
+        <div class="modal-box mobile-beta-box">
+            <div class="modal-header beta-header">
+                <h2>⚠️ AVISO: EXPERIÊNCIA MOBILE EM BETA</h2>
+                <button class="close-btn" data-close="modal-mobile-beta">&times;</button>
+            </div>
+            <div class="modal-body beta-body">
+                <div class="beta-icon-alert">📱⚠️</div>
+                <h3 class="beta-title">AVISO DE COMPATIBILIDADE</h3>
+                <p class="beta-text-main">
+                    O <b>jogo super legal</b> não possui suporte total a celulares e dispositivos móveis.
+                </p>
+                <div class="beta-badge-banner">EXPERIÊNCIA MOBILE EM VERSÃO BETA</div>
+                <p class="beta-text-sub">
+                    A versão mobile está em fase experimental de desenvolvimento. Para melhor desempenho, precisão de combate e a experiência completa, recomendamos jogar no <b>computador (PC)</b>.
+                </p>
+            </div>
+            <div class="modal-footer beta-footer">
+                <button class="modal-btn accept-beta-btn" id="btn-accept-beta">ENTENDIDO, CONTINUAR EM BETA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: TERMOS DE USO (POPUP INICIAL) -->
+    <div class="modal-backdrop active" id="modal-terms">
+        <div class="modal-box terms-box">
+            <div class="modal-header">
+                <h2>📜 TERMOS DE SERVIÇO E LICENÇA DE USUÁRIO</h2>
+            </div>
+            <div class="terms-subbanner">
+                <span>Por favor, leia atentamente e aceite os termos abaixo para jogar jogo super legal</span>
+            </div>
+            <div class="modal-body terms-body" id="terms-container">
+                <!-- Javascript will inject 250 lines of terms here -->
+            </div>
+            <div class="modal-footer terms-footer">
+                <button class="modal-btn decline-btn" id="btn-decline-terms">RECUSAR</button>
+                <button class="modal-btn accept-btn" id="btn-accept-terms">ACEITAR E CONCORDAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: OPÇÕES -->
+    <div class="modal-backdrop" id="modal-options">
+        <div class="modal-box options-box">
+            <div class="modal-header">
+                <h2>⚙️ OPÇÕES DO JOGO E GRÁFICOS</h2>
+                <button class="close-btn" data-close="modal-options">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="options-grid" id="options-container">
+                    <!-- Dynamic rendering of 40 graphics options -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" data-close="modal-options">SALVAR CONFIGURAÇÕES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CRÉDITOS -->
+    <div class="modal-backdrop" id="modal-credits">
+        <div class="modal-box credits-box">
+            <div class="modal-header">
+                <h2>📜 CRÉDITOS</h2>
+                <button class="close-btn" data-close="modal-credits">&times;</button>
+            </div>
+            <div class="credits-subbanner">
+                <div class="studio-title">BOSTA LIQUIDA PRODUCTIONS</div>
+                <div class="copyright-subtitle">Todos os direitos reservados por que nós queremos</div>
+            </div>
+            <div class="modal-body credits-body" id="credits-container">
+                <!-- Javascript will inject 80 roles here -->
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" data-close="modal-credits">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: UPDATES -->
+    <div class="modal-backdrop" id="modal-updates">
+        <div class="modal-box updates-box">
+            <div class="modal-header">
+                <h2>📋 LOG DE UPDATES</h2>
+                <button class="close-btn" data-close="modal-updates">&times;</button>
+            </div>
+            <div class="modal-body updates-body" id="updates-container">
+                <!-- Javascript will inject 60 updates here -->
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" data-close="modal-updates">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GAMEPLAY FULLSCREEN TOP-DOWN -->
+    <div class="modal-backdrop fullscreen-backdrop" id="modal-gameplay">
+        <div class="fullscreen-game-container">
+            
+            <!-- CANVAS FULLSCREEN VIEWPORT (TELA CHEIA TOTAL, SEM BARRA HORIZONTAL) -->
+            <div class="canvas-fullscreen-wrapper">
+                <canvas id="gameCanvas"></canvas>
+                
+                <!-- HUD MINIMALISTA FLUTUANTE NA INTERFACE (CANTO SUPERIOR ESQUERDO) -->
+                <div class="hud-floating-player" id="hud-floating-player">
+                    <!-- Textos acima da barra de vida: nível e vida (escrito em cima, não dentro) -->
+                    <div class="hud-stat-header-row">
+                        <span class="hud-stat-name">asafgamery</span>
+                        <span class="hud-stat-tag-level">NV. <b id="hud-level">1</b></span>
+                        <span class="hud-stat-tag-hp"><b id="hud-hp">100 / 100</b> ❤️</span>
+                    </div>
+
+                    <!-- Barra de Vida Minimalista (sem texto dentro da barra) -->
+                    <div class="hud-hp-bar-track">
+                        <div class="hud-hp-bar-fill" id="hp-bar-fill"></div>
+                    </div>
+
+                    <!-- Dinheiro Flutuante Logo Abaixo da Barra -->
+                    <div class="hud-stat-footer-row">
+                        <span class="hud-money-pill">🪙 <span id="hud-money">R$ 150</span></span>
+                    </div>
+                </div>
+
+                <!-- GRUPO FLUTUANTE DE CONTROLES NO CANTO SUPERIOR DIREITO (FLEXBOX — NUNCA SE SOBREPÕEM) -->
+                <div class="hud-top-right-group" id="hud-top-right-group">
+                    <button class="hud-floating-fs-btn" id="btn-gameplay-fs" title="Alternar Tela Cheia">
+                        <span class="fs-icon">⛶</span>
+                        <span class="fs-text">TELA CHEIA</span>
+                    </button>
+                    <button class="hud-floating-menu-btn" id="btn-toggle-hud-panel" title="Abrir Menu e Informações">
+                        <span class="hud-menu-btn-icon">⚙️</span>
+                        <span class="hud-menu-btn-text">PAINEL</span>
+                    </button>
+                </div>
+
+                <!-- PAINEL LATERAL RETRÁTIL NA DIREITA (LOCAL, MISSÃO, SENSO, ADMIN, SAIR) -->
+                <aside class="hud-side-drawer" id="hud-side-panel">
+                    <div class="drawer-header">
+                        <div class="drawer-title">⚔️ PAINEL DO JOGO</div>
+                        <button class="drawer-close-btn" id="btn-close-hud-panel" title="Fechar Painel">&times;</button>
+                    </div>
+
+                    <div class="drawer-body">
+                        <!-- Seção de Status e Informações do Mundo -->
+                        <div class="drawer-group">
+                            <div class="drawer-group-title">INFORMAÇÕES</div>
+                            
+                            <div class="drawer-info-card location">
+                                <span class="card-icon">📍</span>
+                                <div class="card-content">
+                                    <span class="card-title">LOCALIZAÇÃO</span>
+                                    <span class="card-val" id="hud-location">ilha inicial</span>
+                                </div>
+                            </div>
+
+                            <div class="drawer-info-card quest">
+                                <span class="card-icon">📜</span>
+                                <div class="card-content">
+                                    <span class="card-title">MISSÃO ATUAL</span>
+                                    <span class="card-val" id="hud-quest">Nenhuma</span>
+                                </div>
+                            </div>
+
+                            <div class="drawer-info-card sense" id="hud-sense-badge">
+                                <span class="card-icon">⚡</span>
+                                <div class="card-content">
+                                    <span class="card-title">SENSO SUPER LEGAL</span>
+                                    <span class="card-val">DESATIVADO [Y]</span>
+                                </div>
+                            </div>
+
+                            <div class="drawer-info-card mp-card" id="hud-mp-badge" style="display: none;">
+                                <span class="card-icon">🌐</span>
+                                <div class="card-content">
+                                    <span class="card-title">SALA MULTIPLAYER</span>
+                                    <span class="card-val"><span id="hud-mp-code">----</span> (<span id="hud-mp-role">OFFLINE</span>)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="drawer-divider"></div>
+
+                        <!-- Seção de Ações do Jogo -->
+                        <div class="drawer-group">
+                            <div class="drawer-group-title">AÇÕES DO JOGO</div>
+                            
+                            <button class="drawer-action-btn admin-btn" id="btn-open-admin">
+                                <span class="btn-ic">👑</span>
+                                <span class="btn-lb">PAINEL ADMIN (H+K)</span>
+                            </button>
+
+                            <button class="drawer-action-btn info-btn" id="btn-info-menu">
+                                <span class="btn-ic">📊</span>
+                                <span class="btn-lb">DADOS DO PERSONAGEM</span>
+                            </button>
+
+                            <button class="drawer-action-btn fs-btn" id="btn-drawer-fs">
+                                <span class="btn-ic">⛶</span>
+                                <span class="btn-lb">ALTERNAR TELA CHEIA</span>
+                            </button>
+
+                            <button class="drawer-action-btn exit-btn" data-close="modal-gameplay">
+                                <span class="btn-ic">🚪</span>
+                                <span class="btn-lb">SAIR DO JOGO</span>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+                
+                <!-- Backdrop translúcido quando o painel lateral estiver aberto -->
+                <div class="hud-drawer-backdrop" id="hud-drawer-backdrop"></div>
+                
+                <!-- CONTROLS OVERLAY HINT -->
+                <div class="fullscreen-controls-hint">
+                    <span>🎮 Controles: <b>WASD</b> andar (ou <b>Joystick</b> no celular) | <b>Q</b> DASH | <b>Y</b> SENSO | <b>Espaço/Clique</b> Atacar | <b>E</b> Interagir | <b>H+K</b> Admin</span>
+                </div>
+
+                <!-- DIALOG OVERLAY -->
+                <div class="dialog-overlay" id="dialog-box">
+                    <div class="dialog-speaker" id="dialog-speaker">NPC</div>
+                    <div class="dialog-text" id="dialog-text">Olá!</div>
+                    <div class="dialog-actions" id="dialog-actions">
+                        <button class="dialog-btn" id="dialog-btn-ok">ENTENDIDO</button>
+                    </div>
+                </div>
+
+                <!-- HOTBAR OVERLAY (INVENTÁRIO RÁPIDO) -->
+                <div class="hotbar-overlay">
+                    <div class="hotbar-slot active" id="slot-1">
+                        <span class="slot-num">1</span>
+                        <span class="slot-icon" id="hotbar-weapon-icon">🗡️</span>
+                        <span class="slot-name" id="hotbar-weapon-name">espada espada</span>
+                    </div>
+                    <div class="hotbar-slot empty" id="slot-2">
+                        <span class="slot-num">2</span>
+                        <span class="slot-icon" id="hotbar-slot2-icon">---</span>
+                        <span class="slot-name" id="hotbar-slot2-name">---</span>
+                    </div>
+                    <div class="hotbar-slot empty">
+                        <span class="slot-num">3</span>
+                        <span class="slot-icon">---</span>
+                    </div>
+                    <div class="hotbar-slot empty">
+                        <span class="slot-num">4</span>
+                        <span class="slot-icon">---</span>
+                    </div>
+                    <div class="hotbar-slot empty">
+                        <span class="slot-num">5</span>
+                        <span class="slot-icon">---</span>
+                    </div>
+                </div>
+
+                <!-- CAMADA DE CONTROLES PARA CELULAR / TOUCH (ATIVO APENAS EM DISPOSITIVOS MÓVEIS) -->
+                <div class="mobile-controls-layer" id="mobile-controls-layer">
+                    <!-- JOYSTICK ANALÓGICO VIRTUAL (ESQUERDA) -->
+                    <div class="joystick-wrapper" id="joystick-wrapper">
+                        <div class="joystick-base" id="joystick-base">
+                            <div class="joystick-dir-indicator dir-up">▲</div>
+                            <div class="joystick-dir-indicator dir-right">▶</div>
+                            <div class="joystick-dir-indicator dir-down">▼</div>
+                            <div class="joystick-dir-indicator dir-left">◀</div>
+                            <div class="joystick-stick" id="joystick-stick">
+                                <div class="stick-center-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES DE AÇÕES NA TELA (DIREITA) -->
+                    <div class="mobile-actions-wrapper" id="mobile-actions-wrapper">
+                        <!-- Botão Ataque Principal (Destaque) -->
+                        <button class="mobile-action-btn btn-attack" id="mbtn-attack" aria-label="Atacar">
+                            <span class="mbtn-icon">⚔️</span>
+                            <span class="mbtn-label">ATACAR</span>
+                        </button>
+
+                        <div class="mobile-secondary-btns">
+                            <!-- Botão Dash -->
+                            <button class="mobile-action-btn btn-dash" id="mbtn-dash" aria-label="Dash">
+                                <span class="mbtn-icon">💨</span>
+                                <span class="mbtn-label">DASH</span>
+                                <span class="mbtn-cooldown" id="mbtn-dash-cd"></span>
+                            </button>
+
+                            <!-- Botão Interagir -->
+                            <button class="mobile-action-btn btn-interact" id="mbtn-interact" aria-label="Interagir com NPCs e objetos">
+                                <span class="mbtn-icon">💬</span>
+                                <span class="mbtn-label">FALAR</span>
+                            </button>
+
+                            <!-- Botão Senso Super Legal -->
+                            <button class="mobile-action-btn btn-sense" id="mbtn-sense" aria-label="Senso Super Legal">
+                                <span class="mbtn-icon">⚡</span>
+                                <span class="mbtn-label">SENSO</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL: PAINEL DE ADMIN (H + K) -->
+    <div class="modal-backdrop" id="modal-admin">
+        <div class="modal-box admin-box">
+            <div class="modal-header admin-header">
+                <h2>👑 PAINEL DE ADMIN DO ASAFGAMERY (H + K)</h2>
+                <button class="close-btn" id="btn-close-admin">&times;</button>
+            </div>
+            <div class="modal-body admin-body">
+                <div class="admin-section">
+                    <h3>💵 DAR DINHEIRO</h3>
+                    <div class="admin-buttons-row">
+                        <button class="modal-btn admin-act-btn" id="admin-add-100">+ R$ 100</button>
+                        <button class="modal-btn admin-act-btn" id="admin-add-1000">+ R$ 1.000</button>
+                        <button class="modal-btn admin-act-btn" id="admin-add-10000">+ R$ 10.000</button>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>⭐ DAR NÍVEIS</h3>
+                    <div class="admin-buttons-row">
+                        <button class="modal-btn admin-act-btn" id="admin-add-1lvl">+ 1 Level</button>
+                        <button class="modal-btn admin-act-btn" id="admin-set-lvl5">Definir Nível 5 (Liberar Ilha 2)</button>
+                        <button class="modal-btn admin-act-btn" id="admin-set-lvl13">Definir Nível 13 (Liberar Quest 'npc')</button>
+                        <button class="modal-btn admin-act-btn" id="admin-set-lvl20">Definir Nível 20 (Liberar Ilha 3)</button>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🗡️ DAR ESPADAS</h3>
+                    <div class="admin-buttons-row">
+                        <button class="modal-btn admin-act-btn" id="admin-w1">espada espada</button>
+                        <button class="modal-btn admin-act-btn" id="admin-w2">espada melhor</button>
+                        <button class="modal-btn admin-act-btn" id="admin-w3">espada mais melhor</button>
+                        <button class="modal-btn admin-act-btn" id="admin-w4">espada muito mais melhor</button>
+                        <button class="modal-btn admin-act-btn" id="admin-w5">espada ultimate</button>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🏝️ TELEPORTE DE ILHAS</h3>
+                    <div class="admin-buttons-row">
+                        <button class="modal-btn admin-act-btn" id="admin-tp-1">Ilha Inicial</button>
+                        <button class="modal-btn admin-act-btn" id="admin-tp-2">Ilha dps da Inicial</button>
+                        <button class="modal-btn admin-act-btn" id="admin-tp-3">3ª Ilha (Gelo e Lava)</button>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>⚡ PODERES SUPREMOS</h3>
+                    <div class="admin-buttons-row">
+                        <button class="modal-btn admin-act-btn" id="admin-godmode">Modo Deus (Invencível)</button>
+                        <button class="modal-btn admin-act-btn" id="admin-unlock-sense">Desbloquear Senso Super Legal</button>
+                        <button class="modal-btn admin-act-btn" id="admin-killall">Eliminar Inimigos da Tela</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="btn-exit-admin">FECHAR PAINEL DE ADMIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LOJA DE ESPADAS -->
+    <div class="modal-backdrop" id="modal-shop">
+        <div class="modal-box shop-box">
+            <div class="modal-header">
+                <h2>🏪 LOJA DA LOJA - VENDEDOR DE ESPADAS</h2>
+                <button class="close-btn" id="btn-close-shop">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Compre espadas melhores para causar mais dano!</p>
+                <div class="shop-grid">
+                    <div class="shop-card">
+                        <div class="shop-icon">⚔️</div>
+                        <div class="shop-title">espada melhor</div>
+                        <div class="shop-desc">Dano: 30 | Alcance: 55</div>
+                        <div class="shop-price">R$ 200</div>
+                        <button class="modal-btn shop-buy-btn" data-buy="espada melhor" data-price="200">COMPRAR</button>
+                    </div>
+                    <div class="shop-card">
+                        <div class="shop-icon">🗡️✨</div>
+                        <div class="shop-title">espada mais melhor</div>
+                        <div class="shop-desc">Dano: 50 | Alcance: 65</div>
+                        <div class="shop-price">R$ 500</div>
+                        <button class="modal-btn shop-buy-btn" data-buy="espada mais melhor" data-price="500">COMPRAR</button>
+                    </div>
+                    <div class="shop-card">
+                        <div class="shop-icon">🔥🗡️</div>
+                        <div class="shop-title">espada muito mais melhor</div>
+                        <div class="shop-desc">Dano: 100 | Alcance: 85</div>
+                        <div class="shop-price">R$ 1000</div>
+                        <button class="modal-btn shop-buy-btn" data-buy="espada muito mais melhor" data-price="1000">COMPRAR</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="btn-exit-shop">FECHAR LOJA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ROLETA DE LOOTBOX (R$ 100) -->
+    <div class="modal-backdrop" id="modal-lootbox">
+        <div class="modal-box lootbox-box">
+            <div class="modal-header">
+                <h2>🎁 ROLETA DE LOOTBOX (CUSTO: R$ 100)</h2>
+                <button class="close-btn" id="btn-close-lootbox">&times;</button>
+            </div>
+            <div class="modal-body lootbox-body">
+                <p class="modal-desc">Role a caixa de suprimentos misteriosos por apenas R$ 100!</p>
+                <div class="spinner-container">
+                    <div class="spinner-arrow">🔻</div>
+                    <div class="spinner-display" id="lootbox-display">🎁 CLIQUE EM ROLETAR!</div>
+                </div>
+                <div class="lootbox-result" id="lootbox-result">Gaste R$ 100 para testar sua sorte.</div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn roll-btn" id="btn-roll-lootbox">ROLETAR (R$ 100)</button>
+                <button class="modal-btn" id="btn-exit-lootbox">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ROLETA ULTIMATE LOOTBOX (3ª ILHA - R$ 300) -->
+    <div class="modal-backdrop" id="modal-ultimate-lootbox">
+        <div class="modal-box lootbox-box">
+            <div class="modal-header" style="background: #3e1252; border-color: #d154ff;">
+                <h2 style="color: #f6cfff;">⚡ ROLETA ULTIMATE (10% CHANCE DE ESPADA ULTIMATE) - R$ 300</h2>
+                <button class="close-btn" id="btn-close-ult-lootbox">&times;</button>
+            </div>
+            <div class="modal-body lootbox-body">
+                <p class="modal-desc">Role a caixa suprema da 3ª Ilha! 10% de chance de obter a lendária <b>espada ultimate</b>!</p>
+                <div class="spinner-container">
+                    <div class="spinner-arrow">🔻</div>
+                    <div class="spinner-display" id="ult-lootbox-display" style="border-color: #d154ff; color: #f6cfff;">⚡ CLIQUE EM ROLETAR!</div>
+                </div>
+                <div class="lootbox-result" id="ult-lootbox-result">Gaste R$ 300 para buscar a ESPADA ULTIMATE!</div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn roll-btn" id="btn-roll-ult-lootbox" style="background: #6c1f8c; border-color: #d154ff; color: #fff;">ROLETAR ULTIMATE (R$ 300)</button>
+                <button class="modal-btn" id="btn-exit-ult-lootbox">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SECUNDÁRIO: MENU DE INFORMAÇÕES -->
+    <div class="modal-backdrop" id="modal-info">
+        <div class="modal-box info-box">
+            <div class="modal-header">
+                <h2>📊 INFORMAÇÕES DO PERSONAGEM</h2>
+                <button class="close-btn" id="btn-close-info">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>👤 DADOS DO PERSONAGEM</h3>
+                    <p><b>Nome:</b> asafgamery</p>
+                    <p><b>Nível Atual:</b> <span id="info-level">1</span></p>
+                    <p><b>Dinheiro:</b> <span id="info-money">R$ 150</span></p>
+                    <p><b>Vida Máxima:</b> <span id="info-maxhp">100 HP</span> (+5 HP por level)</p>
+                    <p><b>Arma Equipada:</b> <span id="info-weapon">espada espada</span></p>
+                    <p><b>Habilidade:</b> <span id="info-sense">Senso Super Legal (Bloqueado)</span></p>
+                </div>
+                <div class="info-section" style="margin-top: 15px;">
+                    <h3>📜 STATUS DA MISSÃO</h3>
+                    <p><b>Missão Atual:</b> <span id="info-quest-name">Derrotar 4 Bandidos</span></p>
+                    <p><b>Progresso:</b> <span id="info-quest-progress">0 / 4 Mortos</span></p>
+                    <p><b>Status:</b> <span id="info-quest-status">Não Iniciada</span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="btn-ok-info">FECHAR INFORMAÇÕES</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="game.js"></script>
+    <script src="multiplayer.js"></script>
+</body>
+</html>
