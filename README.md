@@ -12,6 +12,12 @@ Explore ilhas, enfrente inimigos, complete missões e melhore seu arsenal neste 
 
 ---
 
+## 🚧 Aviso: jogo em beta
+
+Este jogo ainda está em desenvolvimento: **esta versão é um beta e não representa o lançamento oficial**. Ainda faltam vários sprites e há bastante coisa para terminar e melhorar.
+
+Resolvi publicar esta versão porque muita gente estava pedindo para ver como o jogo está ficando até agora. Obrigado por acompanhar o projeto! 💛
+
 ## ✨ Sobre o jogo
 
 **Jogo Super Legal** é um RPG de ação com visão de cima, feito com HTML, CSS e JavaScript. Explore diferentes regiões, converse com NPCs, lute contra inimigos e chefes, e evolua seu personagem.
@@ -92,6 +98,6 @@ Para jogar multiplayer, é necessário estar conectado à internet para carregar
 
 <div align="center">
 
-Feito com ⚔️, 🌴 e uma quantidade super legal de aventura.
+Feito com muito ❤️☕ por asafgamery e bosta liquida productions
 
 </div>
